@@ -742,27 +742,23 @@ class PlayerFragment : Fragment(R.layout.fragment_player), OnlinePlayerOptions {
             DownloadHelper.startDownloadDialog(requireContext(), childFragmentManager, videoId)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            binding.relPlayerScreenshot.setOnClickListener {
-                if (!this::streams.isInitialized) return@setOnClickListener
-                val surfaceView =
-                    binding.player.videoSurfaceView as? SurfaceView ?: return@setOnClickListener
+        binding.relPlayerScreenshot.setOnClickListener {
+            if (!this::streams.isInitialized) return@setOnClickListener
+            val surfaceView =
+                binding.player.videoSurfaceView as? SurfaceView ?: return@setOnClickListener
 
-                val bmp = Bitmap.createBitmap(
-                    surfaceView.width,
-                    surfaceView.height,
-                    Bitmap.Config.ARGB_8888
-                )
+            val bmp = Bitmap.createBitmap(
+                surfaceView.width,
+                surfaceView.height,
+                Bitmap.Config.ARGB_8888
+            )
 
-                PixelCopy.request(surfaceView, bmp, { _ ->
-                    screenshotBitmap = bmp
-                    val currentPosition =
-                        playerController.currentPosition.toFloat() / 1000
-                    openScreenshotFile.launch("${streams.title}-${currentPosition}.png")
-                }, Handler(Looper.getMainLooper()))
-            }
-        } else {
-            binding.relPlayerScreenshot.isGone = true
+            PixelCopy.request(surfaceView, bmp, { _ ->
+                screenshotBitmap = bmp
+                val currentPosition =
+                    playerController.currentPosition.toFloat() / 1000
+                openScreenshotFile.launch("${streams.title}-${currentPosition}.png")
+            }, Handler(Looper.getMainLooper()))
         }
 
         binding.playerChannel.setOnClickListener {

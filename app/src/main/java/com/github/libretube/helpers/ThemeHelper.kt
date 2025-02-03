@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
-import android.os.Build
 import android.text.Spanned
 import android.view.Window
 import androidx.annotation.ColorInt
@@ -35,12 +34,7 @@ object ThemeHelper {
      * Set the background color of the status bar
      */
     private fun setStatusBarColor(context: Context, window: Window) {
-        window.statusBarColor =
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M && !isDarkMode(context)) {
-                getThemeColor(context, com.google.android.material.R.attr.colorOnBackground)
-            } else {
-                getThemeColor(context, android.R.attr.colorBackground)
-            }
+        window.statusBarColor = getThemeColor(context, android.R.attr.colorBackground)
         WindowCompat.getInsetsController(window, window.decorView)
             .isAppearanceLightStatusBars = !isDarkMode(context)
     }
@@ -54,11 +48,7 @@ object ThemeHelper {
         @ColorInt bottomNavColor: Int?
     ) {
         window.navigationBarColor =
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M && !isDarkMode(context)) {
-                getThemeColor(context, com.google.android.material.R.attr.colorOnBackground)
-            } else {
-                bottomNavColor ?: getThemeColor(context, android.R.attr.colorBackground)
-            }
+            bottomNavColor ?: getThemeColor(context, android.R.attr.colorBackground)
     }
 
     /**

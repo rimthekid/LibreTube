@@ -68,7 +68,7 @@ class DescriptionLayout(
         this.streams = streams
 
         val views = streams.views.formatShort()
-        val date = TextUtils.formatRelativeDate(context, streams.uploaded ?: -1L)
+        val date = TextUtils.formatRelativeDate(streams.uploaded ?: -1L)
         binding.run {
             playerViewsInfo.text = context.getString(R.string.normal_views, views, TextUtils.SEPARATOR + date)
 
@@ -135,7 +135,7 @@ class DescriptionLayout(
         val isNewStateExpanded = binding.descLinLayout.isGone
         if (!isNewStateExpanded) {
             // show a short version of the view count and date
-            val formattedDate = TextUtils.formatRelativeDate(context, streams.uploaded ?: -1L)
+            val formattedDate = TextUtils.formatRelativeDate(streams.uploaded ?: -1L)
             binding.playerViewsInfo.text = context.getString(R.string.normal_views, streams.views.formatShort(),  TextUtils.SEPARATOR + formattedDate)
 
             // limit the title height to two lines

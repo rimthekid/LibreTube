@@ -3,29 +3,20 @@ package com.github.libretube.helpers
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
 import androidx.core.content.getSystemService
 
 object NetworkHelper {
     /**
      * Detect whether network is available
      */
-    @Suppress("DEPRECATION")
     fun isNetworkAvailable(context: Context): Boolean {
         // In case we are using a VPN, we return true since we might be using reverse tethering
         val connectivityManager = context.getSystemService<ConnectivityManager>() ?: return false
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val activeNetwork = connectivityManager.activeNetwork
-            val caps = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
-            return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
-                caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
-        } else {
-            // activeNetworkInfo might return null instead of the VPN, so better check it explicitly
-            val networkInfo = connectivityManager.activeNetworkInfo
-                ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
-            return networkInfo?.isConnected == true
-        }
+        val activeNetwork = connectivityManager.activeNetwork
+        val caps = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
     }
 
     /**

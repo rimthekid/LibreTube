@@ -2,7 +2,6 @@ package com.github.libretube.helpers
 
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
@@ -40,15 +39,12 @@ object DownloadHelper {
     private const val VIDEO_MIMETYPE = "video/*"
 
     fun getDownloadDir(context: Context, path: String): Path {
-        val storageDir = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            context.filesDir
-        } else {
+        val storageDir =
             try {
                 context.getExternalFilesDir(null)!!
             } catch (e: Exception) {
                 context.filesDir
             }
-        }
         return (storageDir.toPath() / path).createDirectories()
     }
 

@@ -3,7 +3,6 @@ package com.github.libretube.util
 import android.content.Context
 import android.icu.text.RelativeDateTimeFormatter
 import android.net.Uri
-import android.os.Build
 import android.text.format.DateUtils
 import androidx.core.text.isDigitsOnly
 import com.github.libretube.BuildConfig
@@ -111,7 +110,7 @@ object TextUtils {
         else -> null
     }
 
-    fun formatRelativeDate(context: Context, unixTime: Long): CharSequence {
+    fun formatRelativeDate(unixTime: Long): CharSequence {
         val date = LocalDateTime.ofInstant(Instant.ofEpochMilli(unixTime), ZoneId.systemDefault())
         val now = LocalDateTime.now()
         val months = date.until(now, ChronoUnit.MONTHS)
@@ -119,22 +118,13 @@ object TextUtils {
         return if (months > 0) {
             val years = months / 12
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val (timeFormat, time) = if (years > 0) {
-                    RelativeDateTimeFormatter.RelativeUnit.YEARS to years
-                } else {
-                    RelativeDateTimeFormatter.RelativeUnit.MONTHS to months
-                }
-                RelativeDateTimeFormatter.getInstance()
-                    .format(time.toDouble(), RelativeDateTimeFormatter.Direction.LAST, timeFormat)
+            val (timeFormat, time) = if (years > 0) {
+                RelativeDateTimeFormatter.RelativeUnit.YEARS to years
             } else {
-                val (timeAgoRes, time) = if (years > 0) {
-                    R.plurals.years_ago to years
-                } else {
-                    R.plurals.months_ago to months
-                }
-                context.resources.getQuantityString(timeAgoRes, time.toInt(), time)
+                RelativeDateTimeFormatter.RelativeUnit.MONTHS to months
             }
+            RelativeDateTimeFormatter.getInstance()
+                .format(time.toDouble(), RelativeDateTimeFormatter.Direction.LAST, timeFormat)
         } else {
             val weeks = date.until(now, ChronoUnit.WEEKS)
             val minResolution = if (weeks > 0) DateUtils.WEEK_IN_MILLIS else 0L
@@ -161,7 +151,7 @@ object TextUtils {
             context.getString(R.string.view_count, it)
         }
         val uploadDate = uploaded.takeIf { it > 0 }?.let {
-            formatRelativeDate(context, it)
+            formatRelativeDate(it)
         }
         return listOfNotNull(uploader, viewsString, uploadDate).joinToString(SEPARATOR)
     }

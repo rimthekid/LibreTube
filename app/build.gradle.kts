@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.github.libretube"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 34
         versionCode = 59
         versionName = "0.27.0"

@@ -2,7 +2,6 @@ package com.github.libretube.helpers
 
 import android.content.Context
 import android.content.res.Configuration
-import android.os.Build
 import android.telephony.TelephonyManager
 import androidx.core.content.getSystemService
 import androidx.core.os.ConfigurationCompat
@@ -29,7 +28,7 @@ object LocaleHelper {
 
     fun updateLanguage(context: Context) {
         val locale = getAppLocale()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) updateResources(context, locale)
+        updateResources(context, locale)
         updateResourcesLegacy(context, locale)
     }
 
