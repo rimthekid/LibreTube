@@ -1,9 +1,12 @@
 package com.github.libretube.api.obj
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Parcelize
 data class PipedInstance(
     val name: String,
     @SerialName("api_url") val apiUrl: String,
@@ -21,4 +24,4 @@ data class PipedInstance(
     @SerialName("uptime_7d") val uptimeWeek: Float? = null,
     @SerialName("uptime_30d") val uptimeMonth: Float? = null,
     val isCurrentlyDown: Boolean = false
-)
+) : Parcelable

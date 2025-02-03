@@ -21,7 +21,6 @@ class InstancesAdapter(
     override fun areContentsTheSame(oldItem: PipedInstance, newItem: PipedInstance): Boolean {
         return oldItem == newItem
     }
-
 }) {
     private var selectedInstanceIndex = initialSelectionApiIndex?.takeIf { it >= 0 }
 

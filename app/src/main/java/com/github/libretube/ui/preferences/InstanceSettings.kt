@@ -10,7 +10,7 @@ import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.libretube.R
-import com.github.libretube.api.InstanceHelper
+import com.github.libretube.api.InstanceRepository
 import com.github.libretube.api.RetrofitInstance
 import com.github.libretube.api.obj.PipedInstance
 import com.github.libretube.constants.IntentData
@@ -53,14 +53,14 @@ class InstanceSettings : BasePreferenceFragment() {
 
         lifecycleScope.launch {
             // update the instances to also show custom ones
-            initInstancesPref(instancePrefs, InstanceHelper.getInstancesFallback(appContext))
+            initInstancesPref(instancePrefs, InstanceRepository(appContext).getInstancesFallback())
 
             // try to fetch the public list of instances async
             try {
                 val instances = withContext(Dispatchers.IO) {
-                    InstanceHelper.getInstances(appContext)
+                    InstanceRepository(appContext).getInstances()
                 }
-                initInstancesPref(instancePrefs, instances)
+                initInstancesPref(instancePrefs, instances.getOrDefault(emptyList()))
             } catch (e: Exception) {
                 appContext.toastFromMainDispatcher(e.message.orEmpty())
             }
@@ -189,9 +189,7 @@ class InstanceSettings : BasePreferenceFragment() {
         val instances = ImmutableList.copyOf(this.instances)
         binding.optionsRecycler.adapter = InstancesAdapter(selectedIndex) {
             selectedInstance = instances[it].apiUrl
-        }.also {
-            it.submitList(instances)
-        }
+        }.also { it.submitList(instances) }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(preference.title)

@@ -12,6 +12,8 @@ import com.github.libretube.db.DatabaseHolder.Database
 import com.github.libretube.extensions.TAG
 import com.github.libretube.obj.BackupFile
 import com.github.libretube.obj.PreferenceItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.decodeFromStream
@@ -42,10 +44,10 @@ object BackupHelper {
      * Restore data from a [BackupFile]
      */
     @OptIn(ExperimentalSerializationApi::class)
-    suspend fun restoreAdvancedBackup(context: Context, uri: Uri) {
+    suspend fun restoreAdvancedBackup(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
         val backupFile = context.contentResolver.openInputStream(uri)?.use {
             JsonHelper.json.decodeFromStream<BackupFile>(it)
-        } ?: return
+        } ?: return@withContext
 
         Database.watchHistoryDao().insertAll(backupFile.watchHistory.orEmpty())
         Database.searchHistoryDao().insertAll(backupFile.searchHistory.orEmpty())
