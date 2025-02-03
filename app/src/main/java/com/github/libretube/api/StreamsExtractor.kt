@@ -1,6 +1,10 @@
 package com.github.libretube.api
 
 import android.content.Context
+import android.util.Log
+import android.webkit.CookieManager
+import com.github.libretube.BuildConfig
+import com.github.libretube.LibreTubeApp
 import com.github.libretube.R
 import com.github.libretube.api.obj.ChapterSegment
 import com.github.libretube.api.obj.Message
@@ -12,7 +16,14 @@ import com.github.libretube.api.obj.Streams
 import com.github.libretube.api.obj.Subtitle
 import com.github.libretube.helpers.PlayerHelper
 import com.github.libretube.ui.dialogs.ShareDialog.Companion.YOUTUBE_FRONTEND_URL
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinInstant
+import org.schabi.newpipe.extractor.NewPipe
+import org.schabi.newpipe.extractor.services.youtube.InnertubeClientRequestInfo
+import org.schabi.newpipe.extractor.services.youtube.PoTokenProvider
+import org.schabi.newpipe.extractor.services.youtube.PoTokenResult
+import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper
+import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor
 import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import org.schabi.newpipe.extractor.stream.VideoStream
@@ -56,7 +67,123 @@ fun StreamInfoItem.toStreamItem(
     isShort = isShortFormContent
 )
 
+
+class PoTokenGenerator : PoTokenProvider {
+    val TAG = PoTokenGenerator::class.simpleName
+    private val supportsWebView by lazy { runCatching { CookieManager.getInstance() }.isSuccess }
+
+    private object WebPoTokenGenLock
+    private var webPoTokenVisitorData: String? = null
+    private var webPoTokenStreamingPot: String? = null
+    private var webPoTokenGenerator: PoTokenWebView? = null
+
+
+
+    override fun getWebClientPoToken(videoId: String?): PoTokenResult? {
+        if (!supportsWebView || videoId == null) {
+            return null
+        }
+
+        return getWebClientPoToken(videoId, false)
+    }
+
+    /**
+     * @param forceRecreate whether to force the recreation of [webPoTokenGenerator], to be used in
+     * case the current [webPoTokenGenerator] threw an error last time
+     * [PoTokenGenerator.generatePoToken] was called
+     */
+    private fun getWebClientPoToken(videoId: String, forceRecreate: Boolean): PoTokenResult {
+        // just a helper class since Kotlin does not have builtin support for 4-tuples
+        data class Quadruple<T1, T2, T3, T4>(val t1: T1, val t2: T2, val t3: T3, val t4: T4)
+
+        val (poTokenGenerator, visitorData, streamingPot, hasBeenRecreated) =
+            synchronized(WebPoTokenGenLock) {
+                val shouldRecreate = webPoTokenGenerator == null || forceRecreate || webPoTokenGenerator!!.isExpired()
+
+                if (shouldRecreate) {
+                    // close the current webPoTokenGenerator on the main thread
+                    webPoTokenGenerator?.close()
+
+                    // create a new webPoTokenGenerator
+                    runBlocking {
+                        webPoTokenGenerator = PoTokenWebView
+                            .newPoTokenGenerator(LibreTubeApp.instance)
+                    }
+
+                    val innertubeClientRequestInfo = InnertubeClientRequestInfo.ofWebClient()
+                    innertubeClientRequestInfo.clientInfo.clientVersion =
+                        YoutubeParsingHelper.getClientVersion()
+
+                    webPoTokenVisitorData = YoutubeParsingHelper.getVisitorDataFromInnertube(
+                        innertubeClientRequestInfo,
+                        NewPipe.getPreferredLocalization(),
+                        NewPipe.getPreferredContentCountry(),
+                        YoutubeParsingHelper.getYouTubeHeaders(),
+                        YoutubeParsingHelper.YOUTUBEI_V1_URL,
+                        null,
+                        false
+                    )
+
+                    // The streaming poToken needs to be generated exactly once before generating
+                    // any other (player) tokens.
+                    runBlocking {
+                        webPoTokenStreamingPot = webPoTokenGenerator!!.generatePoToken(webPoTokenVisitorData!!)
+                    }
+                }
+
+                return@synchronized Quadruple(
+                    webPoTokenGenerator!!,
+                    webPoTokenVisitorData!!,
+                    webPoTokenStreamingPot!!,
+                    shouldRecreate
+                )
+            }
+
+        val playerPot = try {
+            // Not using synchronized here, since poTokenGenerator would be able to generate
+            // multiple poTokens in parallel if needed. The only important thing is for exactly one
+            // visitorData/streaming poToken to be generated before anything else.
+            runBlocking {
+                poTokenGenerator.generatePoToken(videoId)
+            }
+        } catch (throwable: Throwable) {
+            if (hasBeenRecreated) {
+                // the poTokenGenerator has just been recreated (and possibly this is already the
+                // second time we try), so there is likely nothing we can do
+                throw throwable
+            } else {
+                // retry, this time recreating the [webPoTokenGenerator] from scratch;
+                // this might happen for example if NewPipe goes in the background and the WebView
+                // content is lost
+                Log.e(TAG, "Failed to obtain poToken, retrying", throwable)
+                return getWebClientPoToken(videoId = videoId, forceRecreate = true)
+            }
+        }
+
+
+        if (BuildConfig.DEBUG) {
+            Log.d(
+                TAG,
+                "poToken for $videoId: playerPot=$playerPot, " +
+                        "streamingPot=$streamingPot, visitor_data=$visitorData"
+            )
+        }
+
+        return PoTokenResult(visitorData, playerPot, streamingPot)
+    }
+
+    override fun getWebEmbedClientPoToken(videoId: String?): PoTokenResult? = null
+
+    override fun getAndroidClientPoToken(videoId: String?): PoTokenResult? = null
+
+    override fun getIosClientPoToken(videoId: String?): PoTokenResult? = null
+}
+
 object StreamsExtractor {
+    init {
+        YoutubeStreamExtractor.setPoTokenProvider(PoTokenGenerator());
+    }
+
     suspend fun extractStreams(videoId: String): Streams {
         if (!PlayerHelper.disablePipedProxy || !PlayerHelper.localStreamExtraction) {
             return RetrofitInstance.api.getStreams(videoId)
