@@ -17,7 +17,6 @@ private const val GITHUB_API_URL = "https://api.github.com/repos/libre-tube/Libr
 private const val SB_API_URL = "https://sponsor.ajay.app"
 private const val RYD_API_URL = "https://returnyoutubedislikeapi.com"
 private const val GOOGLE_API_KEY = "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw"
-const val REQUEST_KEY = "O43z0dpjhgX20SCx4KAo"
 const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3"
 
 interface ExternalApi {
