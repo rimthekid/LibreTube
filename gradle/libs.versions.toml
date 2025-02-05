@@ -10,7 +10,8 @@ constraintlayout = "2.2.0"
 loggingInterceptor = "4.12.0"
 material = "1.12.0"
 navigation = "2.8.6"
-newpipeextractor = "15e35a28df1205e8a0cf4680dd240554a818a120"
+newpipeextractor = "9f83b385a"
+nanojson = "1d9e1aea9049fc9f85e68b43ba39fe7be1c1f751"
 preference = "1.2.1"
 extJunit = "1.2.1"
 espresso = "3.6.1"
@@ -58,7 +59,8 @@ androidx-media3-exoplayer-hls = { group = "androidx.media3", name="media3-exopla
 androidx-media3-exoplayer-dash = { group = "androidx.media3", name="media3-exoplayer-dash", version.ref="media3" }
 androidx-media3-session = { group="androidx.media3", name="media3-session", version.ref="media3" }
 androidx-media3-ui = { group="androidx.media3", name="media3-ui", version.ref="media3" }
-newpipeextractor = { module = "com.github.AudricV:NewPipeExtractor", version.ref = "newpipeextractor" }
+newpipeextractor = { module = "com.github.TeamNewPipe:NewPipeExtractor", version.ref = "newpipeextractor" }
+nanojson = { module = "com.github.TeamNewPipe:nanojson", version.ref = "nanojson" }
 square-retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 converter-kotlinx-serialization = { group = "com.squareup.retrofit2", name = "converter-kotlinx-serialization", version.ref = "retrofit" }
 desugaring = { group = "com.android.tools", name = "desugar_jdk_libs_nio", version.ref = "desugaring" }

@@ -54,7 +54,7 @@ class PoTokenWebView private constructor(
                 withContext(Dispatchers.Main) {
                     webView.loadDataWithBaseURL(
                         "https://www.youtube.com",
-                        html.replace(
+                        html.replaceFirst(
                             "</script>",
                             // calls downloadAndRunBotguard() when the page has finished loading
                             "\n$JS_INTERFACE.downloadAndRunBotguard()</script>"
@@ -85,19 +85,22 @@ class PoTokenWebView private constructor(
                 "https://www.youtube.com/api/jnn/v1/Create",
                 listOf(REQUEST_KEY)
             )
+            val parsedChallengeData = parseChallengeData(responseBody)
             withContext(Dispatchers.Main) {
                 webView.evaluateJavascript(
-                    """(async function() {
-                    try {
-                        data = JSON.parse(String.raw`$responseBody`)
-                        result = await runBotGuard(data)
-                        this.webPoSignalOutput = result.webPoSignalOutput
-                        $JS_INTERFACE.onRunBotguardResult(result.botguardResponse)
-                    } catch (error) {
-                        $JS_INTERFACE.onJsInitializationError(error.toString())
-                    }
-                })();""",
-                ) {}
+                    """try {
+                             data = $parsedChallengeData
+                             runBotGuard(data).then(function (result) {
+                                 this.webPoSignalOutput = result.webPoSignalOutput
+                                 $JS_INTERFACE.onRunBotguardResult(result.botguardResponse)
+                             }, function (error) {
+                                 $JS_INTERFACE.onJsInitializationError(error + "\n" + error.stack)
+                             })
+                         } catch (error) {
+                             $JS_INTERFACE.onJsInitializationError(error + "\n" + error.stack)
+                         }""",
+                    null
+                )
             }
         }
     }
@@ -125,36 +128,22 @@ class PoTokenWebView private constructor(
                 "https://www.youtube.com/api/jnn/v1/GenerateIT",
                 listOf(REQUEST_KEY, botguardResponse)
             )
+            val (integrityToken, expirationTimeInSeconds) = parseIntegrityTokenData(response)
+
+            // leave 10 minutes of margin just to be sure
+            expirationInstant = Instant.now().plusSeconds(expirationTimeInSeconds - 600)
+
             withContext(Dispatchers.Main) {
                 webView.evaluateJavascript(
-                    """(async function() {
-                        try {
-                            this.integrityToken = JSON.parse(String.raw`$response`)
-                            $JS_INTERFACE.onInitializationFinished(integrityToken[1])
-                        } catch (error) {
-                            $JS_INTERFACE.onJsInitializationError(error.toString())
-                        }
-                    })();""", null
-                )
+                    "this.integrityToken = $integrityToken"
+                ) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d(TAG, "initialization finished, expiration=${expirationTimeInSeconds}s")
+                    }
+                    generatorContinuation.resume(this@PoTokenWebView)
+                }
             }
         }
-    }
-
-    /**
-     * Called during initialization by the JavaScript snippet from [onRunBotguardResult] when the
-     * `integrityToken` has been received by JavaScript.
-     *
-     * @param expirationTimeInSeconds in how many seconds the integrity token expires, can be found
-     * in `integrityToken[1]`
-     */
-    @JavascriptInterface
-    fun onInitializationFinished(expirationTimeInSeconds: Long) {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "onInitializationFinished() called, expiration=${expirationTimeInSeconds}s")
-        }
-        // leave 10 minutes of margin just to be sure
-        expirationInstant = Instant.now().plusSeconds(expirationTimeInSeconds - 600)
-        generatorContinuation.resume(this)
     }
     //endregion
 
@@ -165,19 +154,24 @@ class PoTokenWebView private constructor(
         }
         return suspendCancellableCoroutine { continuation ->
             poTokenContinuations[identifier] = continuation
+            val u8Identifier = stringToU8(identifier)
 
             Handler(Looper.getMainLooper()).post {
                 webView.evaluateJavascript(
-                    """(async function() {
-                        identifier = String.raw`$identifier`
-                        try {
-                            poToken = await obtainPoToken(webPoSignalOutput, integrityToken, identifier)
-                            $JS_INTERFACE.onObtainPoTokenResult(identifier, poToken)
-                        } catch (error) {
-                            $JS_INTERFACE.onObtainPoTokenError(identifier, error.toString())
+                    """try {
+                        identifier = "$identifier"
+                        u8Identifier = $u8Identifier
+                        poTokenU8 = obtainPoToken(webPoSignalOutput, integrityToken, u8Identifier)
+                        poTokenU8String = ""
+                        for (i = 0; i < poTokenU8.length; i++) {
+                            if (i != 0) poTokenU8String += ","
+                            poTokenU8String += poTokenU8[i]
                         }
-                    })();""", null
-                )
+                        $JS_INTERFACE.onObtainPoTokenResult(identifier, poTokenU8String)
+                    } catch (error) {
+                        $JS_INTERFACE.onObtainPoTokenError(identifier, error + "\n" + error.stack)
+                    }""",
+                ) {}
             }
         }
     }
@@ -199,7 +193,17 @@ class PoTokenWebView private constructor(
      * result of the JavaScript `obtainPoToken()` function.
      */
     @JavascriptInterface
-    fun onObtainPoTokenResult(identifier: String, poToken: String) {
+    fun onObtainPoTokenResult(identifier: String, poTokenU8: String) {
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "Generated poToken (before decoding): identifier=$identifier poTokenU8=$poTokenU8")
+        }
+        val poToken = try {
+            u8ToBase64(poTokenU8)
+        } catch (t: Throwable) {
+            poTokenContinuations.remove(identifier)?.resumeWithException(t)
+            return
+        }
+
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "Generated poToken: identifier=$identifier poToken=$poToken")
         }

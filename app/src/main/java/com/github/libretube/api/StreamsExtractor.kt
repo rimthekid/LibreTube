@@ -1,6 +1,8 @@
 package com.github.libretube.api
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.webkit.CookieManager
 import com.github.libretube.BuildConfig
@@ -78,9 +80,8 @@ class PoTokenGenerator : PoTokenProvider {
     private var webPoTokenGenerator: PoTokenWebView? = null
 
 
-
-    override fun getWebClientPoToken(videoId: String?): PoTokenResult? {
-        if (!supportsWebView || videoId == null) {
+    override fun getWebClientPoToken(videoId: String): PoTokenResult? {
+        if (!supportsWebView) {
             return null
         }
 
@@ -101,15 +102,6 @@ class PoTokenGenerator : PoTokenProvider {
                 val shouldRecreate = webPoTokenGenerator == null || forceRecreate || webPoTokenGenerator!!.isExpired()
 
                 if (shouldRecreate) {
-                    // close the current webPoTokenGenerator on the main thread
-                    webPoTokenGenerator?.close()
-
-                    // create a new webPoTokenGenerator
-                    runBlocking {
-                        webPoTokenGenerator = PoTokenWebView
-                            .newPoTokenGenerator(LibreTubeApp.instance)
-                    }
-
                     val innertubeClientRequestInfo = InnertubeClientRequestInfo.ofWebClient()
                     innertubeClientRequestInfo.clientInfo.clientVersion =
                         YoutubeParsingHelper.getClientVersion()
@@ -124,9 +116,16 @@ class PoTokenGenerator : PoTokenProvider {
                         false
                     )
 
-                    // The streaming poToken needs to be generated exactly once before generating
-                    // any other (player) tokens.
                     runBlocking {
+                        // close the current webPoTokenGenerator on the main thread
+                        webPoTokenGenerator?.let { Handler(Looper.getMainLooper()).post { it.close() } }
+
+                        // create a new webPoTokenGenerator
+                        webPoTokenGenerator = PoTokenWebView
+                            .newPoTokenGenerator(LibreTubeApp.instance)
+
+                        // The streaming poToken needs to be generated exactly once before generating
+                        // any other (player) tokens.
                         webPoTokenStreamingPot = webPoTokenGenerator!!.generatePoToken(webPoTokenVisitorData!!)
                     }
                 }
