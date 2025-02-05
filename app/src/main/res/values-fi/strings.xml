@@ -108,7 +108,7 @@
     <string name="sponsorblock_summary">Käyttää https://sponsor.ajay.app ohjelmointirajapintaa</string>
     <string name="category_intro_summary">Aikaväli ilman mitään todellista sisältöä. Voi olla tauko, staattinen freimi tai toistuva animaatio. Ei tule käyttää siirroksiin, jotka sisältävät tietoa</string>
     <string name="category_interaction_summary">Kun on lyhyt muistutus tykätä, tilata tai seurata sisällön keskellä. Jos se on pitkä tai jotain erityistä, sen tulisi olla itsensä mainostamista</string>
-    <string name="category_outro">Loppukortit ja krediitit</string>
+    <string name="category_outro">Loppukortit ja kiitettävää</string>
     <string name="color_accent">Aksentit</string>
     <string name="category_outro_summary">Tiedot lopun jälkeen. Ei johtopäätöksille, jotka sisältävät tietoa</string>
     <string name="material_you">Material You</string>
