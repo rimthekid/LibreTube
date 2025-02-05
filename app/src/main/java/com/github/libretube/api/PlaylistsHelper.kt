@@ -71,7 +71,9 @@ object PlaylistsHelper {
         playlistsRepository.createPlaylist(playlistName)
 
     suspend fun addToPlaylist(playlistId: String, vararg videos: StreamItem) =
-        playlistsRepository.addToPlaylist(playlistId, *videos)
+        withContext(Dispatchers.IO) {
+            playlistsRepository.addToPlaylist(playlistId, *videos)
+        }
 
     suspend fun renamePlaylist(playlistId: String, newName: String) =
         playlistsRepository.renamePlaylist(playlistId, newName)
