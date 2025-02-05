@@ -5,8 +5,10 @@ import com.github.libretube.api.obj.PipedInstance
 import com.github.libretube.api.obj.SubmitSegmentResponse
 import com.github.libretube.api.obj.VoteInfo
 import com.github.libretube.obj.update.UpdateInfo
+import kotlinx.serialization.json.JsonElement
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Url
@@ -14,6 +16,8 @@ import retrofit2.http.Url
 private const val GITHUB_API_URL = "https://api.github.com/repos/libre-tube/LibreTube/releases/latest"
 private const val SB_API_URL = "https://sponsor.ajay.app"
 private const val RYD_API_URL = "https://returnyoutubedislikeapi.com"
+private const val GOOGLE_API_KEY = "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw"
+const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3"
 
 interface ExternalApi {
     // only for fetching servers list
@@ -51,4 +55,17 @@ interface ExternalApi {
         @Query("userID") userID: String,
         @Query("type") score: Int
     )
+
+    @Headers(
+        "User-Agent: $USER_AGENT",
+        "Accept: application/json",
+        "Content-Type: application/json+protobuf",
+        "x-goog-api-key: $GOOGLE_API_KEY",
+        "x-user-agent: grpc-web-javascript/0.1",
+    )
+    @POST
+    suspend fun botguardRequest(
+        @Url url: String,
+        @Body jsonPayload: List<String>
+    ): JsonElement
 }
