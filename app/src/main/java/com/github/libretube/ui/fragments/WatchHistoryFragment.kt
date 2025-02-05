@@ -24,13 +24,11 @@ import com.github.libretube.db.obj.WatchHistoryItem
 import com.github.libretube.extensions.ceilHalf
 import com.github.libretube.extensions.dpToPx
 import com.github.libretube.extensions.setOnDismissListener
-import com.github.libretube.helpers.NavBarHelper
 import com.github.libretube.helpers.NavigationHelper
 import com.github.libretube.helpers.PreferenceHelper
 import com.github.libretube.ui.adapters.WatchHistoryAdapter
 import com.github.libretube.ui.base.DynamicLayoutManagerFragment
 import com.github.libretube.ui.extensions.addOnBottomReachedListener
-import com.github.libretube.ui.extensions.setupFragmentAnimation
 import com.github.libretube.ui.models.CommonPlayerViewModel
 import com.github.libretube.ui.sheets.BaseBottomSheet
 import com.github.libretube.util.PlayingQueue
@@ -167,10 +165,6 @@ class WatchHistoryFragment : DynamicLayoutManagerFragment(R.layout.fragment_watc
             }
 
             showWatchHistory(history)
-        }
-
-        if (NavBarHelper.getStartFragmentId(requireContext()) != R.id.watchHistoryFragment) {
-            setupFragmentAnimation(binding.root)
         }
     }
 

@@ -23,7 +23,7 @@ import com.github.libretube.helpers.PreferenceHelper
 import com.github.libretube.ui.activities.MainActivity
 import com.github.libretube.ui.adapters.SearchHistoryAdapter
 import com.github.libretube.ui.adapters.SearchSuggestionsAdapter
-import com.github.libretube.ui.extensions.setupFragmentAnimation
+import com.github.libretube.ui.extensions.setOnBackPressed
 import com.github.libretube.ui.models.SearchViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -81,7 +81,7 @@ class SearchSuggestionsFragment : Fragment(R.layout.fragment_search_suggestions)
             showData(it)
         }
 
-        setupFragmentAnimation(binding.root) {
+        setOnBackPressed {
             if (mainActivity.searchView.anyChildFocused()) mainActivity.searchView.clearFocus()
             else findNavController().popBackStack()
         }

@@ -25,7 +25,7 @@ import com.github.libretube.helpers.PreferenceHelper
 import com.github.libretube.ui.activities.MainActivity
 import com.github.libretube.ui.adapters.SearchResultsAdapter
 import com.github.libretube.ui.base.DynamicLayoutManagerFragment
-import com.github.libretube.ui.extensions.setupFragmentAnimation
+import com.github.libretube.ui.extensions.setOnBackPressed
 import com.github.libretube.ui.models.SearchResultViewModel
 import com.github.libretube.util.TextUtils.toTimeInSeconds
 import kotlinx.coroutines.Dispatchers
@@ -105,7 +105,7 @@ class SearchResultFragment : DynamicLayoutManagerFragment(R.layout.fragment_sear
             }
         }
 
-        setupFragmentAnimation(binding.root) {
+        setOnBackPressed {
             findNavController().popBackStack(R.id.searchFragment, true) ||
                     findNavController().popBackStack()
         }

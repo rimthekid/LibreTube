@@ -9,11 +9,9 @@ import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.RecyclerView
 import com.github.libretube.R
 import com.github.libretube.databinding.FragmentTrendsBinding
-import com.github.libretube.helpers.NavBarHelper
 import com.github.libretube.ui.activities.SettingsActivity
 import com.github.libretube.ui.adapters.VideosAdapter
 import com.github.libretube.ui.base.DynamicLayoutManagerFragment
-import com.github.libretube.ui.extensions.setupFragmentAnimation
 import com.github.libretube.ui.models.TrendsViewModel
 import com.google.android.material.snackbar.Snackbar
 
@@ -65,10 +63,6 @@ class TrendsFragment : DynamicLayoutManagerFragment(R.layout.fragment_trends) {
         })
 
         viewModel.fetchTrending(requireContext())
-
-        if (NavBarHelper.getStartFragmentId(requireContext()) != R.id.trendsFragment) {
-            setupFragmentAnimation(binding.root)
-        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
